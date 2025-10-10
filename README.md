@@ -36,4 +36,32 @@ Detailed steps are in the sections below. This README will be updated as feature
 ## Security note
 Keys are sent directly to the offerer over your local network connection initiated by the accepter; pairing tokens are short-lived. Review the source before use in sensitive environments.
 
+## CLI via npx
+
+You can use the CLI either locally from this repo or (once published) via npm.
+
+- Local (from this repo):
+	- npx --no-install ssh-helper help
+	- npx --no-install ssh-helper start --port=4321
+	- npx --no-install ssh-helper status --host=localhost --port=4321
+	- npx --no-install ssh-helper accept --host=192.168.1.10 --code=ABCDEFGH
+	- npx --no-install ssh-helper grant --host=192.168.1.10 --code=ABCDEFGH
+	- npx --no-install ssh-helper open --host=localhost --port=4321
+
+- From npm (after publish under `@hexafield/ssh-helper`):
+	- npx @hexafield/ssh-helper help
+	- npx @hexafield/ssh-helper start --port=4321
+	- npx @hexafield/ssh-helper status --host=localhost --port=4321
+	- npx @hexafield/ssh-helper accept --host=192.168.1.10 --code=ABCDEFGH
+	- npx @hexafield/ssh-helper grant --host=192.168.1.10 --code=ABCDEFGH
+	- npx @hexafield/ssh-helper open --host=localhost --port=4321
+
+Commands:
+- start: run the server (use --port)
+- status: print server status JSON
+- accept: send your pubkey to the offerer (use --host and --code or --token)
+- grant: append the offerer’s pubkey to your `authorized_keys`
+- open: open the web UI in your browser
+- gen-key: generate an ed25519 SSH key if missing and print the public key
+
 *** Work in progress ***

@@ -5,6 +5,9 @@
   "description": "Helper to set up SSH access between two machines via QR code or pairing code over LAN/Tailscale",
   "license": "MIT",
   "type": "module",
+  "bin": {
+    "ssh-helper": "bin/ssh-helper.js"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "NODE_ENV=development node server.js"
