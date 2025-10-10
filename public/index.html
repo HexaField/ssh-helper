@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SSH Helper</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main>
+      <h1>SSH Helper</h1>
+      <section id="status-section">
+        <div class="card">
+          <p>Pairing token and code:</p>
+          <div class="token-row"><code id="token">...</code><button id="copyToken">Copy token</button></div>
+          <div class="token-row"><code id="code">........</code><button id="copyCode">Copy code</button></div>
+          <p class="muted">Share this with the accepter or have them scan the QR below.</p>
+        </div>
+      </section>
+      <section id="qr-section">
+        <div class="card">
+          <div id="qrcode"></div>
+          <p class="muted" id="qr-hint"></p>
+        </div>
+      </section>
+      <section id="ips-section">
+        <div class="card">
+          <h3>Reachable addresses</h3>
+          <ul id="ips"></ul>
+        </div>
+      </section>
+      <section id="install-section" class="card">
+        <h3>Accepter one-liner</h3>
+        <p class="muted">Run this on the accepter to send its SSH public key here:</p>
+        <pre id="oneliner"></pre>
+        <button id="copyOneLiner">Copy command</button>
+      </section>
+    </main>
+    <script src="/app.js" type="module"></script>
+  </body>
+  </html>

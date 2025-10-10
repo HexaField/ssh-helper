@@ -1,0 +1,18 @@
+{
+  "name": "@hexafield/ssh-helper",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Helper to set up SSH access between two machines via QR code or pairing code over LAN/Tailscale",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "NODE_ENV=development node server.js"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
