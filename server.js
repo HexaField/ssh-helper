@@ -265,9 +265,9 @@ fi
         }
       }
 
-      // Not running as root: return a safe command the offerer should run as root to apply
-      const safeCmd = `sudo bash -c 'cat > ${filename} <<\'EOF\'\n# added by ssh-helper on ${new Date().toISOString()}\n${sudoLine}\nEOF\' && sudo chmod 440 ${filename} && sudo visudo -c -f ${filename}`;
-      return send(res, 200, { ok: true, applied: false, needs_root: true, command: safeCmd });
+  // Not running as root: return a safe command the offerer should run as root to apply
+  const safeCmd = `sudo bash -c 'cat > ${filename} <<\'EOF\'\n# added by ssh-helper on ${new Date().toISOString()}\n${sudoLine}\nEOF\' && sudo chmod 440 ${filename} && sudo visudo -c -f ${filename}`;
+      return send(res, 200, { ok: true, applied: false, needs_root: true, command: safeCmd, username, filename, sudoLine });
     } catch (e) {
       return send(res, 500, { error: e.message || String(e) });
     }
