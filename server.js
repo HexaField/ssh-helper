@@ -5,6 +5,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import url from 'node:url';
 import QRCode from 'qrcode';
+import { execSync } from 'node:child_process';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -59,6 +60,7 @@ let state = {
   port: Number(process.env.PORT) || 4321,
   paired: false,
   lastInstallFrom: null,
+  lastInstallUser: null,
   tokenIssuedAt: Date.now(),
   tokenTtlSec: 15 * 60,
 };
@@ -205,7 +207,7 @@ fi
     const ageSec = Math.floor((Date.now() - state.tokenIssuedAt) / 1000);
     if (ageSec > state.tokenTtlSec) return send(res, 400, { error: 'token expired' });
     try {
-      const body = await readJson(req);
+  const body = await readJson(req);
       if (!body || typeof body.pubkey !== 'string') return send(res, 400, { error: 'missing pubkey' });
       const pub = (body.pubkey || '').trim().replace(/[\r\n]+/g, ' ');
       // Basic validation: type, base64 blob, optional comment
@@ -222,10 +224,50 @@ fi
       try { fs.chmodSync(authKeys, 0o600); } catch {}
       state.paired = true;
       state.lastInstallFrom = body.hostname || null;
+      state.lastInstallUser = body.user || null;
       // Rotate token after success
       state.token = genToken();
       state.tokenIssuedAt = Date.now();
       return send(res, 200, { ok: true });
+    } catch (e) {
+      return send(res, 500, { error: e.message || String(e) });
+    }
+  }
+
+  // Grant sudo to a user on the offerer machine
+  if (pathName === '/api/grant-sudo' && method === 'POST') {
+    try {
+      const body = await readJson(req);
+      const token = body?.token || parsed.query.token;
+      const username = (body?.username || state.lastInstallUser || '').toString();
+      const nopass = !!body?.nopass;
+      if (!token || token !== state.token) return send(res, 400, { error: 'invalid token' });
+      const ageSec = Math.floor((Date.now() - state.tokenIssuedAt) / 1000);
+      if (ageSec > state.tokenTtlSec) return send(res, 400, { error: 'token expired' });
+      if (!username) return send(res, 400, { error: 'missing username' });
+
+      const sudoLine = nopass ? `${username} ALL=(ALL) NOPASSWD: ALL` : `${username} ALL=(ALL) ALL`;
+      const filename = `/etc/sudoers.d/ssh-helper-${username}`;
+
+      // If running as root, attempt to write sudoers.d file and validate with visudo
+      if (typeof process.getuid === 'function' && process.getuid() === 0) {
+        try {
+          fs.writeFileSync(filename, `# added by ssh-helper on ${new Date().toISOString()}\n${sudoLine}\n`, { mode: 0o440 });
+          // Validate syntax
+          try { execSync(`visudo -c -f ${filename}`, { stdio: 'pipe' }); } catch (e) {
+            // revert and error
+            try { fs.unlinkSync(filename); } catch {};
+            return send(res, 500, { error: 'visudo validation failed', detail: String(e) });
+          }
+          return send(res, 200, { ok: true, applied: true, file: filename });
+        } catch (e) {
+          return send(res, 500, { error: 'failed to write sudoers file', detail: String(e) });
+        }
+      }
+
+      // Not running as root: return a safe command the offerer should run as root to apply
+      const safeCmd = `sudo bash -c 'cat > ${filename} <<\'EOF\'\n# added by ssh-helper on ${new Date().toISOString()}\n${sudoLine}\nEOF\' && sudo chmod 440 ${filename} && sudo visudo -c -f ${filename}`;
+      return send(res, 200, { ok: true, applied: false, needs_root: true, command: safeCmd });
     } catch (e) {
       return send(res, 500, { error: e.message || String(e) });
     }

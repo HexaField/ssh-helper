@@ -31,6 +31,21 @@ Option B — Code + IP:
 
 The script will generate an SSH key if missing and send your public key over HTTP to the offerer.
 
+## Granting sudo to the accepter (optional)
+Sometimes you may want to grant the accepter sudo access on the offerer machine. This can be done from the web UI or the CLI.
+
+- Web UI: on the offerer page (http://localhost:4321) there is a "Grant accepter sudo on this machine" button under the Accepter one-liner. Clicking it will attempt to write a sudoers file (`/etc/sudoers.d/ssh-helper-<username>`) if the helper is running as root. If the helper is not running as root, it will return a safe command you can run as root to apply the sudoers file.
+
+- CLI: use the `grant-sudo` command to request the offerer add sudo for the accepter. Example:
+
+```bash
+npx @hexafield/ssh-helper grant-sudo --host=192.168.1.10 --code=ABCDEFGH --username=accepter
+```
+
+The server will respond with either a success object (applied on the offerer) or a `needs_root` response containing a `command` string you should run on the offerer as root to apply the sudoers file safely. Default behavior grants normal sudo (password required). Use `--nopass` to request NOPASSWD (administrator discretion required).
+
+Security note: granting sudo is powerful. Prefer granting only specific commands via a custom sudoers file rather than full NOPASSWD all-commands access.
+
 Detailed steps are in the sections below. This README will be updated as features are implemented.
 
 ## Security note

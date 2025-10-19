@@ -112,6 +112,20 @@ async function cmdGrant(flags) {
   console.log('Added offerer public key to authorized_keys');
 }
 
+async function cmdGrantSudo(flags) {
+  const host = flags.host;
+  if (!host) throw new Error('Missing --host');
+  const port = Number(flags.port || 4321);
+  const token = await resolveToken({ host, port, code: flags.code, token: flags.token });
+  const payload = { token, username: flags.username || undefined, nopass: !!flags.nopass };
+  const resp = await httpJSON('POST', `http://${host}:${port}/api/grant-sudo`, payload);
+  console.log('grant-sudo response:', resp);
+  if (resp?.needs_root && resp.command) {
+    console.log('\nRun this on the offerer as root to apply:');
+    console.log(resp.command);
+  }
+}
+
 async function cmdOpen(flags) {
   const host = flags.host || 'localhost';
   const port = Number(flags.port || 4321);
@@ -143,6 +157,8 @@ async function main() {
         return await cmdAccept(flags);
       case 'grant':
         return await cmdGrant(flags);
+      case 'grant-sudo':
+        return await cmdGrantSudo(flags);
       case 'open':
         return await cmdOpen(flags);
       case 'gen-key':

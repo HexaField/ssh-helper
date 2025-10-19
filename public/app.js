@@ -40,6 +40,27 @@ async function init() {
   copyOneLiner.onclick = () => navigator.clipboard.writeText(status.oneliner);
   document.getElementById('copyCode').onclick = () => navigator.clipboard.writeText(status.code);
 
+    // Grant sudo flow
+    const grantBtn = document.getElementById('grantSudoBtn');
+    const grantResult = document.getElementById('grantResult');
+    grantBtn.onclick = async () => {
+      grantResult.textContent = 'Requesting sudo grant...';
+      try {
+        const resp = await fetch('/api/grant-sudo', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token: status.token }) });
+        if (!resp.ok) throw new Error(`status ${resp.status}`);
+        const j = await resp.json();
+        if (j.applied) {
+          grantResult.textContent = `Sudo applied on offerer: ${j.file}`;
+        } else if (j.needs_root) {
+          grantResult.innerHTML = `Not running as root. Run this on the offerer as root to apply:<br><pre>${j.command}</pre>`;
+        } else {
+          grantResult.textContent = JSON.stringify(j);
+        }
+      } catch (e) {
+        grantResult.textContent = `Grant failed: ${e.message || e}`;
+      }
+    };
+
     // Poll pairing status
     const poll = async () => {
       try {
